@@ -7,6 +7,7 @@ const cors = require('cors');
 
 const app = express();
 const PORT = 3016;
+console.log('file-upload server start=====');
 
 // 中间件配置
 app.use(cors());

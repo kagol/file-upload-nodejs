@@ -2,7 +2,6 @@
   "name": "root-file-upload",
   "private": true,
   "scripts": {
-    "dev": "pnpm -F web dev",
-    "server": "pnpm -F server dev"
+    "dev": "pnpm -F web dev"
   }
 }
