@@ -1,0 +1,208 @@
+<!-- test.html - 前端测试页面 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件上传测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .upload-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #28a745;
+            display: none;
+        }
+        .result.error {
+            border-left-color: #dc3545;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .preview {
+            margin-top: 10px;
+        }
+        .preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 4px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 单文件上传 -->
+    <div class="upload-section">
+        <h2>1. 单文件上传</h2>
+        <form id="singleForm">
+            <div class="form-group">
+                <label>选择文件：</label>
+                <input type="file" name="file" required>
+            </div>
+            <button type="submit">上传</button>
+        </form>
+        <div id="singleResult" class="result"></div>
+    </div>
+
+    <!-- 多文件上传 -->
+    <div class="upload-section">
+        <h2>2. 多文件上传（最多5个）</h2>
+        <form id="multipleForm">
+            <div class="form-group">
+                <label>选择文件：</label>
+                <input type="file" name="files" multiple required>
+            </div>
+            <button type="submit">上传</button>
+        </form>
+        <div id="multipleResult" class="result"></div>
+    </div>
+
+    <!-- 图片专用上传 -->
+    <div class="upload-section">
+        <h2>3. 图片专用上传（仅图片，最大5MB）</h2>
+        <form id="imageForm">
+            <div class="form-group">
+                <label>选择图片：</label>
+                <input type="file" name="image" accept="image/*" required>
+            </div>
+            <button type="submit">上传</button>
+            <div class="preview" id="imagePreview"></div>
+        </form>
+        <div id="imageResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3016';
+
+        // 显示结果
+        function showResult(elementId, data, isError = false) {
+            const el = document.getElementById(elementId);
+            el.style.display = 'block';
+            el.className = 'result' + (isError ? ' error' : '');
+            el.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        // 单文件上传
+        document.getElementById('singleForm').addEventListener('submit', async (e) => {
+          console.log('单文件上传==');
+          
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/upload/single`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                showResult('singleResult', data, !data.success);
+            } catch (err) {
+                showResult('singleResult', { error: err.message }, true);
+            }
+        });
+
+        // 多文件上传
+        document.getElementById('multipleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            const files = e.target.files.files;
+            
+            for (let file of files) {
+                formData.append('files', file);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/upload/multiple`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                showResult('multipleResult', data, !data.success);
+            } catch (err) {
+                showResult('multipleResult', { error: err.message }, true);
+            }
+        });
+
+        // 图片上传 + 预览
+        document.querySelector('#imageForm input').addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                preview.appendChild(img);
+            }
+        });
+
+        document.getElementById('imageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/upload/image`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                showResult('imageResult', data, !data.success);
+            } catch (err) {
+                showResult('imageResult', { error: err.message }, true);
+            }
+        });
+    </script>
+</body>
+</html>
