@@ -17,6 +17,40 @@ const imageError = ref(false)
 const imageUrl = ref('')
 const imageFile = ref<HTMLInputElement | null>(null)
 
+const apiList = ref<any[]>([])
+// 接口列表
+const fetchAPIList = async () => {
+  try {
+    const res = await fetch(`${API_BASE}`)
+    const data = await res.json()
+    return data
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+fetchAPIList().then(data => {
+  console.log('fetchAPIList', data)
+  apiList.value = data.endpoints
+})
+
+const apiUploadList = ref<any[]>([])
+
+const fetchAPIUploadList = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/upload/list`)
+    const data = await res.json()
+    return data
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+fetchAPIUploadList().then(data => {
+  console.log('fetchAPIUploadList:', data)
+  apiUploadList.value = data.data
+})
+
 // 1. 单文件上传
 const handleSingleUpload = async () => {
   const input = singleFile.value
@@ -95,6 +129,21 @@ const handleImageUpload = async () => {
 
 <template>
   <div class="file-upload-container">
+    <div class="file-upload-api-list">
+      <h2>接口列表</h2>
+      <ol>
+        <li v-for="api in apiList" :key="api">{{ api }}</li>
+      </ol>
+    </div>
+    <div class="file-upload-api-upload-list">
+      <h2>上传接口列表</h2>
+      <ol>
+        <li v-for="api in apiUploadList" :key="api">
+          {{ API_BASE + api.url }}
+          <img :src="API_BASE + api.url" :alt="api.name" width="60"/>
+        </li>
+      </ol>
+    </div>
     <!-- 单文件上传 -->
     <div class="upload-section">
       <h2>1. 单文件上传</h2>

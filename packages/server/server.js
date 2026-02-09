@@ -130,10 +130,12 @@ app.get('/', (req, res) => {
         status: 'OK',
         message: '文件上传服务运行中',
         endpoints: [
-            'POST /api/upload/single',
-            'POST /api/upload/multiple', 
-            'POST /api/upload/image',
-            'GET  /api/upload/list'
+            '单文件上传 POST /api/upload/single',
+            '多文件上传 POST /api/upload/multiple',
+            '多字段文件上传 POST /api/upload/fields',
+            '图片上传 POST /api/upload/image',
+            '文件删除 DELETE /api/upload/delete/:filename',
+            '获取文件列表 GET  /api/upload/list',
         ]
     });
 });
